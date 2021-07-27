@@ -1,0 +1,121 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager Backup Job Sessions. Overview of Backup Job Sessions
+###
+#
+- name: Overview of Backup Job Sessions
+  actions:
+    - name: collect elements
+      url: /backupSessions?format=Entity
+      var_name: _root
+      vars:
+        timestart: "{{ 'now-1d' | to_timestamp() }}"
+        jobs: {}
+
+    - name: procceed elements
+      with_items: "{{ BackupJobSessions }}"
+      when:
+        - " item.CreationTimeUTC | to_timestamp() > timestart "
+      actions:
+#        - name: debug item
+#          debug:
+#            msg: "item: {{ item| tojson(indent=2) }}"
+
+        - name: determine last job status from all jobs starts
+          set_fact:
+            item_start: "{{ item.CreationTimeUTC | to_timestamp }}"
+            hash_key: "{{ item.Links[0].Name + item.JobName + item.JobType }}"
+            hash: "{{ hash_key|hashsum }}"
+            dummy: >-
+              {% if item.Result == "None" %}
+                 {% set cur_state = item.State %}
+              {% else %}
+                 {% set cur_state = item.Result %}
+              {% endif %}
+
+              {% if item.EndTimeUTC is not defined %}
+                 {% set cur_endtimestamp = 'now'|to_timestamp %}
+              {% else %}
+                 {% set cur_endtimestamp = item.EndTimeUTC|to_timestamp %}
+              {% endif %}
+
+              {% if not hash in jobs %}
+                 {% set dummy = jobs|update( { hash: {
+                    'backupserver': item.Links[0].Name,
+                    'jobname': item.JobName,
+                    'name': item.Name,
+                    'jobtype': item.JobType,
+                    'state': cur_state | job_status,
+                    'starttimestamp': item_start,
+                    'endtimestamp': cur_endtimestamp,
+                    'uid': item.UID|split(':')|last,
+                    'retries': 0
+                    } } )
+                 %}
+              {% else %}
+                 {% if jobs[hash]['starttimestamp'] < item_start %}
+                    {% set t = jobs[hash]|update( {
+                              'state': cur_state | job_status,
+                              'starttimestamp': item_start,
+                              'endtimestamp': cur_endtimestamp,
+                              'uid': item.UID|split(':')|last,
+                              'retries': jobs[hash]['retries']|int + 1
+                       } )
+                    %}
+                 {% else %}
+                    {% set t = jobs[hash]|update( { 'retries': jobs[hash]['retries']|int + 1 } ) %}
+                 {% endif %}
+              {% endif %}
+              unused
+              
+              
+
+#        - name: debug job
+#          debug:
+#            msg: "job: {{ jobs[hash]| tojson(indent=2) }}"
+
+    - name: loop on aggregate jobs (values) to generate metric
+      with_items: "{{ jobs|values() }}"
+      loop_var: job
+      when:
+        - job is defined
+        - job is mapping
+      actions:
+        - name: build metrics from computed jobs
+          vars:
+            labels:
+              - name: backupserver
+                value: "{{ job.backupserver }}"
+              - name: name
+                value: "{{ job.name }}"
+              - name: jobname
+                value: "{{ job.jobname }}"
+              - name: jobtype
+                value: "{{ job.jobtype }}"
+#          - name: jobretries
+#            value: "{{ job.retries }}"
+#          - name: jobstate
+#            value: "{{ job.state }}"
+
+          metric_prefix: veeam_em_jobs_sessions
+          metrics:
+            - name: "{{ counter.name }}"
+              help: "{{ counter.help }}"
+              type: gauge
+              labels: "{{ labels }}"
+              value: "{{ counter.value }}"
+              with_items:
+                - name: 'state'
+                  help: "resulting status of the job (0: undefined - 1: Success - 2: Warning - 3: Failed - 4: Idle - 5: Working)"
+                  value: "{{ job.state }}"
+                - name: duration
+                  help: 'operation duration in second'
+                  value: "{{ job.endtimestamp|int - job.starttimestamp|int }}"
+                - name: 'retries'
+                  help: "number of times of the job has been retried (0: no retry)"
+                  value: "{{ job.retries }}"
+              loop_var: counter
+
+...

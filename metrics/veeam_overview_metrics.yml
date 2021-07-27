@@ -1,0 +1,35 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+##
+## Veeam Enterprise Manager Overview. Overview of Backup Infrastructure and Job Status
+## docs: https://helpcenter.veeam.com/docs/backup/em_rest/get_reports_summary_overview.html?ver=110
+###
+#
+- name: Overview of Backup Infrastructure and Job Status
+  actions:
+    - name: collect elements
+      url: /reports/summary/overview
+      var_name: _root
+    - name: proceed elements
+      metric_prefix: veeam_em_overview
+      metrics:
+        - name: element_count
+          help: count by type "backup", "proxy", "repository", "scheduled_jobs", "successful_vms", "warning_vms"
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+            - name: count_type
+              value: "{{ item.count_type }}"
+          value: "{{ item.value }}"
+          with_items:
+             - { type: "backup", count_type: "server", value: "{{ BackupServers }}" }
+             - { type: "proxy", count_type: "server", value: "{{ ProxyServers }}" }
+             - { type: "repository", count_type: "server", value: "{{ RepositoryServers }}" }
+             - { type: "scheduled_jobs", count_type: "tasks", value: "{{ ScheduledJobs }}" }
+             - { type: "successful_vms", count_type: "tasks", value: "{{ SuccessfulVmLastestStates }}" }
+             - { type: "warning_vms", count_type: "tasks", value: "{{ WarningVmLastestStates }}" }
+             - { type: "failed_vms", count_type: "tasks", value: "{{ FailedVmLastestStates }}" }
+
+...

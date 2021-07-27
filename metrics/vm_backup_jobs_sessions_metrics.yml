@@ -1,0 +1,167 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager Backup Job Sessions per VM. Overview of Backup Job Sessions per VM. Really useful to display if a VM it is protected or not
+###
+#
+- name: Overview of Backup Job Sessions per VM
+  actions:
+
+    - name: init vars
+      set_fact:
+        vmjobs: {}
+
+    - name: loop all jobs for vm
+      with_items: "{{ jobs|values }}"
+      when:
+        - job is defined and job is mapping
+      loop_var: job
+      actions:
+#        - name: debug url
+#          debug:
+#            msg: "url: '/backupSessions/{{ job.uid }}/taskSessions?format=entity'"
+
+        - name: collect data
+          url: "/backupSessions/{{ job.uid }}/taskSessions?format=entity"
+          var_name: vmres
+
+        - name: process results
+          with_items: "{{ vmres.BackupTaskSessions }}"
+          actions:
+
+#            - name: debug item
+#              debug:
+#                msg: "item: {{ item| tojson(indent=2) }}"
+
+            - name: determine last job status from all jobs starts
+              set_fact:
+                item_start: "{{ item.CreationTimeUTC | to_timestamp }}"
+                hash_key: "{{ job.backupserver + job.jobname + item.VmDisplayName }}"
+                hash: "{{ hash_key|hashsum }}"
+                dummy: >-
+                  {% if item.State == "Completed" %}
+                     {% set cur_state = item.Result %}
+                  {% else %}
+                     {% set cur_state = item.State %}
+                  {% endif %}
+
+                  {% if item.EndTimeUTC is not defined %}
+                     {% set cur_endtimestamp = 'now'|to_timestamp %}
+                  {% else %}
+                     {% set cur_endtimestamp = item.EndTimeUTC|to_timestamp %}
+                  {% endif %}
+
+                  {% if not hash in vmjobs %}
+                     {% set dummy = vmjobs|update( { hash: {
+                        'backupserver': job.backupserver,
+                        'jobname': job.jobname,
+                        'taskname': item.Name,
+                        'vmname': item.VmDisplayName,
+                        'state': cur_state| vmjob_status,
+                        'starttimestamp': item_start,
+                        'endtimestamp': cur_endtimestamp,
+                        'total_size_bytes': item.TotalSize,
+                        'reason': item.Reason,
+                        'retries': 0
+                        } } )
+                     %}
+                  {% else %}
+                     {% if vmjobs[hash]['starttimestamp'] < item_start %}
+                        {{ vmjobs[hash]|update( {
+                                  'state': cur_state|vmjob_status,
+                                  'starttimestamp': item_start,
+                                  'endtimestamp': cur_endtimestamp,
+                                  'total_size_bytes': item.TotalSize,
+                                  'reason': item.Reason,
+                                  'retries': vmjobs[hash]['retries']|int + 1
+                           } )
+                        }}
+                     {% else %}
+                        {% set t= vmjobs[hash]|update( {
+                                  'retries': vmjobs[hash]['retries']|int + 1,
+                               } ) %}
+                     {% endif %}
+                  {% endif %}
+                  dummy
+                
+                
+
+    - name: loop on aggregate vmjobs (values) to generate metric
+      with_items: "{{ vmjobs|values() }}"
+      loop_var: job
+      when:
+        - job is defined
+        - job is mapping
+      actions:
+#        - name: debug item
+#          debug:
+#            msg: "vmjob: vmname: {{ job.vmname }} - state: {{ job.state }} - reason : {{ job.reason }}"
+#          when:
+#            - job.state != 1
+
+        - name: build metrics from computed vmjobs
+          vars:
+            labels:
+              - name: backupserver
+                value: "{{ job.backupserver }}"
+              - name: jobname
+                value: "{{ job.jobname }}"
+              - name: vmname
+                value: "{{ job.vmname }}"
+              - name: taskname
+                value: "{{ job.taskname }}"
+
+          metric_prefix: veeam_em_vmjobs_sessions
+          metrics:
+            - name: "{{ counter.name }}"
+              help: "{{ counter.help }}"
+              type: gauge
+              labels: "{{ labels }}"
+              value: "{{ counter.value }}"
+              with_items:
+                - name: state
+                  help: "vm backup job status (0 undefined / 1 Success / 2 Warning / 3 Failed / 4 Pending-Idle / 5 Working-In Progress)"
+                  value: "{{ job.state }}"
+                - name: duration
+                  help: 'operation duration in second'
+                  value: "{{ job.endtimestamp|int - job.starttimestamp|int }}"
+                - name: retries
+                  help: "number of times of the job has been retried (0: no retry)"
+                  value: "{{ job.retries }}"
+                - name: total_bytes
+                  help: total bytes save by the job for vm
+                  value: "{{ job.total_size_bytes }}"
+
+              loop_var: counter
+
+    - name: loop on aggregate vmjobs (values) to generate metric
+      with_items: "{{ vmjobs|values() }}"
+      loop_var: job
+      when:
+        - job is defined
+        - job is mapping
+        - job.state in (2,3)
+      actions:
+        - name: build vm jobs errors
+          vars:
+            labels:
+              - name: backupserver
+                value: "{{ job.backupserver }}"
+              - name: jobname
+                value: "{{ job.jobname }}"
+              - name: vmname
+                value: "{{ job.vmname }}"
+              - name: taskname
+                value: "{{ job.taskname }}"
+              - name: message
+                value: "{{ job.reason }}"
+
+          metric_prefix: veeam_em_vmjobs_sessions
+          metrics:
+            - name: errors
+              help: "use to set error's message label"
+              value: "{{ job.state }}"
+              labels: "{{ labels }}"
+      
+...

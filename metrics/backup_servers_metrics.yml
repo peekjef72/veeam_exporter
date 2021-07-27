@@ -1,0 +1,34 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager Backup Servers. Overview of Backup Repositories
+###
+#
+- name: Overview of Backup Repositories
+  actions:
+    - name: collect elements
+      url: /backupServers?format=Entity
+      var_name: _root
+
+    - name: procceed elements
+      metric_prefix: veeam_em_backup_servers
+      with_items: "{{ BackupServers }}"
+      metrics:
+        - name: config
+          help: config of each backup repository 
+          type: gauge
+          labels:
+            - name: name
+              value: "{{ item.Name }}"
+            - name: description
+              value: "{{ item.Description }}"
+            - name: port
+              value: "{{ item.Port }}"
+            - name: version
+              value: "{{ item.Version | backup_server }}"
+            - name: full_version
+              value: "{{ item.Version }}"
+          value: 1
+
+...

@@ -1,0 +1,50 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager NAS Jobs. Overview of the NAS Jobs. Really useful to display the NAS Jobs
+###
+#
+- name: Overview of the NAS Jobs
+  url: /nas/backupSessions?format=Entity
+  metric_prefix: veeam_em_nas_sessions
+  vars:
+    timestart_str: 'now-1d'
+    timestart: "{{ timestart_str |to_timestamp }}"
+  metrics:
+    - name: state
+      help: nas job status (1 Succes - 2 Warning - 3 Failed)
+      type: gauge
+      labels:
+        - name: backupserver
+          value: "{{ item.Links[0].Name }}"
+        - name: jobname
+          value: "{{ item.JobName }}"
+        - name: type
+          value: "{{ item.JobType }}"
+        - name: state
+          value: "{{ item.State }}"
+      value: "{{ item.Result | job_status }}"
+      with_items: "{{ BackupJobSessions }}"
+      when:
+        - "{{ item.CreationTimeUTC | to_timestamp }} > {{ timestart }}"
+
+    - name: duration
+      help: nas job duration in second
+      type: gauge
+      labels:
+        - name: backupserver
+          value: "{{ item.Links[0].Name }}"
+        - name: jobname
+          value: "{{ item.JobName }}"
+        - name: type
+          value: "{{ item.JobType }}"
+        - name: state
+          value: "{{ item.State }}"
+      value_eval: "{{ item.EndTimeUTC | to_timestamp }} - {{ item.CreationTimeUTC | to_timestamp }}"
+
+      with_items: "{{ BackupJobSessions }}"
+      when:
+        - "{{ item.CreationTimeUTC | to_timestamp }} > {{ timestart }}"
+
+...

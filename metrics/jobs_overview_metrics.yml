@@ -1,0 +1,61 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+##
+## Veeam Enterprise Manager Overview. Overview of Job Statistics
+###
+#
+- name: Overview of Job Statistics
+  actions:
+    - name: collect elements
+      url: /reports/summary/job_statistics
+      var_name: _root
+
+    - name: procceed elements
+      metric_prefix: veeam_em_overview_jobs
+      metrics:
+        - name: count
+          help: various count of job types "running", "scheduled", "scheduled_backup" "scheduled_replica_jobs_count"
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+          value: "{{ item.value }}"
+          with_items: 
+             - type: "running"
+               value: "{{ RunningJobs }}"
+             - type: "scheduled"
+               value: "{{ ScheduledJobs }}"
+             - type: "scheduled_backup"
+               value: "{{ ScheduledBackupJobs }}"
+             - type: "scheduled_replica"
+               value: "{{ ScheduledReplicaJobs }}"
+
+        - name: runs_count
+          help: total number of job runs by type "total", "successfull", "warning", "failed"
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+          value: "{{ item.value }}"
+          with_items: 
+             - { type: "total", value: "{{ TotalJobRuns }}" }
+             - { type: "successfull", value: "{{ SuccessfulJobRuns }}" }
+             - { type: "warning", value: "{{ WarningsJobRuns }}" }
+             - { type: "failed", value: "{{ FailedJobRuns }}" }
+
+        - name: max_duration
+          help: max duration for job by type and name of longuest
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+            - name: jobname
+              value: "{{ item.jobname }}"
+          value: "{{ item.value }}"
+          with_items: 
+             - { type: "job", jobname: "", value: "{{ MaxJobDuration }}" }
+             - { type: "backupjob", jobname: "{{ MaxDurationBackupJobName }}", value: "{{ MaxBackupJobDuration }}" }
+             - { type: "replicajob", jobname: "{{ MaxDurationReplicaJobName }}", value: "{{ MaxReplicaJobDuration }}" }
+
+...

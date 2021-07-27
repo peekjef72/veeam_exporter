@@ -1,0 +1,33 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager Backup Agent Status. Overview of the Veeam Agents. Really useful to display if an Agent it is uo to date and also the status
+###
+
+- name: Overview of the Veeam Agents
+  actions:
+    - name: collect elements
+      url: /agents/discoveredComputers?format=Entity
+      var_name: _root
+
+    - name: procceed elements
+      metric_prefix: veeam_em_agents
+      with_items: "{{ DiscoveredComputers }}"
+      metrics:
+        - name: status
+          help: backup agent status 1 Online / 2 Offline
+          type: gauge
+          labels:
+            - name: backupserver
+              value: "{{ item.Links[0].Name }}"
+            - name: name
+              value: "{{ item.Name }}"
+            - name: version
+              value: "{{ item.AgentVersion }}"
+            - name: osversion
+              value: "{{ item.OsVersion }}"
+          value: "{{ item.HostStatus | agent_status }}"
+
+...
+

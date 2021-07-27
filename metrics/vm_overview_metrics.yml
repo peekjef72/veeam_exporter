@@ -1,0 +1,48 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+##
+## Veeam Enterprise Manager Overview. Overview of Virtual Machines
+###
+#
+- name: Overview of Virtual Machines
+  actions:
+    - name: collect elements
+      url: /reports/summary/vms_overview
+      var_name: _root
+
+    - name: proceed elements
+      metric_prefix: veeam_em_overview_vms
+      metrics:
+        - name: count
+          help: VMs count by protection type "protected","backedup","replicated","restore_points"
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+          value: "{{ item.value }}"
+          with_items:
+             - { type: "protected", value: "{{ ProtectedVms }}" }
+             - { type: "backedup", value: "{{ BackedUpVms }}" }
+             - { type: "replicated", value: "{{ ReplicatedVms }}" }
+             - { type: "restore_points", value: "{{ RestorePoints }}" }
+
+        - name: total_bytes
+          help: VMs total size in bytes by type "full_backup_points", "incremental_backup_points", "replica_restore_points", "source_vms"
+          type: gauge
+          labels:
+            - name: type
+              value: "{{ item.type }}"
+          value: "{{ item.value }}"
+          with_items:
+             - { type: "full_backup_points", value: "{{ FullBackupPointsSize }}" }
+             - { type: "incremental_backup_points", value: "{{ IncrementalBackupPointsSize }}" }
+             - { type: "replica_restore_points", value: "{{ ReplicaRestorePointsSize }}" }
+             - { type: "source_vms", value: "{{ SourceVmsSize }}" }
+
+        - name: sucess_backup_percent
+          help: percent of sucessful backup of VMs
+          type: gauge
+          value: "{{ SuccessBackupPercents }}"
+
+...

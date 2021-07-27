@@ -1,0 +1,54 @@
+---
+
+# https://raw.githubusercontent.com/jorgedlcruz/veeam-enterprise_manager-grafana/master/veeam_enterprisemanager.sh
+###
+## Veeam Enterprise Manager Replica Job Sessions. Overview of Replica Job Sessions
+###
+#
+- name: Overview of Replica Job Sessions
+  url: /replicaSessions?format=Entity
+  metric_prefix: veeam_em_replica_jobs_sessions
+  vars:
+     timestart_str: "now-1d"
+     timestart: "{{ timestart_str | to_timestamp }}"
+  metrics:
+    - name: state
+      help: replica job status (1 Succes - 2 Warning - 3 Failed)
+      type: gauge
+      labels:
+        - name: backupserver
+          value: "{{ item.Links[0].Name }}"
+        - name: jobname
+          value: "{{ item.JobName }}"
+        - name: type
+          value: "{{ item.JobType }}"
+        - name: state
+          value: "{{ item.State }}"
+        - name: startdate
+          value: "{{ item.CreationTimeUTC }}"
+      value: "{{ item.Result | job_status }}"
+      with_items: "{{ ReplicaJobSessions }}"
+      when:
+        - "{{ item.CreationTimeUTC | to_timestamp }} > {{ timestart }}"
+
+    - name: duration
+      help: replica job duration
+      type: gauge
+      labels:
+        - name: backupserver
+          value: "{{ item.Links[0].Name }}"
+        - name: jobname
+          value: "{{ item.JobName }}"
+        - name: type
+          value: "{{ item.JobType }}"
+        - name: state
+          value: "{{ item.State }}"
+        - name: startdate
+          value: "{{ item.CreationTimeUTC }}"
+      value_eval: "{{ item.EndTimeUTC | to_timestamp }} - {{ item.CreationTimeUTC | to_timestamp }}"
+      with_items: "{{ ReplicaJobSessions }}"
+      when:
+        - "{{ item.CreationTimeUTC | to_timestamp }} > {{ timestart }}"
+
+
+...
