@@ -1,5 +1,3 @@
-#import os, logging
-
 from veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
 from requests.exceptions import ConnectionError, ReadTimeout, RequestException
 
@@ -7,11 +5,6 @@ from prometheus_client import CollectorRegistry, generate_latest, Gauge
 
 from tenacity import retry, RetryError, retry_if_exception_type
 from tenacity import stop_after_attempt, wait_fixed, retry_if_result
-
-NSERR_SESSION_EXPIRED = 0x1BC
-NSERR_AUTHTIMEOUT = 0x403
-NSERR_NOUSER = 0x162
-NSERR_INVALPASSWD = 0x163
 
 #*******************************************************************************************************
 # functions for tenacity
@@ -59,25 +52,25 @@ class VeeamExporter(object):
    #***********************************************
    @retry(stop=stop_after_attempt(2), retry=retry_if_result(retry_get))
    def ns_session_get(self, url):
-        try:
-            data = self.api.GET( url )
-            if data:
-               return self.SUCCESS, data
-            else:
-               return self.FAILURE, None
-        except RequestException as err:
-            self.logger.error('Stat Access Error {}'.format(err))
-        except VeeamAPIUnauthorizedError:
-            self.ns_session_clear()
-            if self.login():
-                return 'retry', None
-            else:
-                return self.FAILURE, None
+      try:
+         data = self.api.GET( url )
+         if data:
+            return self.SUCCESS, data
+         else:
+            return self.FAILURE, None
 
-        except Exception as e:
-            self.logger.error('Unable to access stats from ADC {}'.format(e))
-        return self.FAILURE, None
+      except RequestException as e:
+         self.logger.error('Stat Access Error on {1}: {0}'.format(e, self.api.getHost()))
 
+      except VeeamAPIUnauthorizedError:
+         self.ns_session_clear()
+         if self.login():
+            return 'retry', None
+
+      except Exception as e:
+         self.logger.error('Unable to access stats from Veeam Enterprise Manager on {1}: {0}'.format(e, self.api.getHost()))
+
+      return self.FAILURE, None
 
    #***********************************************
    def ns_session_clear(self):
@@ -105,29 +98,26 @@ class VeeamExporter(object):
 
       ''' Login to ADC and get a session id for stat access'''
       try:
+         has_logged = self.api.hasLogged()
          login = self.api.login()
 
          if 'SessionId' in login:
             if login['SessionId'] != '':
-               self.logger.info("Veeam Entreprise Manager Session Login Successful")
+               if not nas_logged:
+                  self.logger.info("Veeam Entreprise Manager Session Login Successful on {0}".format( self.api.getHost() ) )
                return self.SUCCESS
-            elif login['errorcode'] in [NSERR_SESSION_EXPIRED, NSERR_AUTHTIMEOUT]:
-               self.logger.error("Veeam Entreprise Manager Session Login Failed: Retrying")
-               return 'retry'
-            elif login['errorcode'] in [NSERR_NOUSER, NSERR_INVALPASSWD]:
-               self.logger.error('Invalid username or password for Veeam Entreprise Manager')
 
       except (ConnectionError, ReadTimeout) as exc:
-         self.logger.error('Connection Exception: {0}'.format(exc))
+         self.logger.error('Connection Exception: Host {1}: {0}'.format(exc, self.api.getHost()))
       except VeeamAPIUnauthorizedError as exc:
          self.logger.error("user '{0}' not authorized on https://{1}:{2}".format(
                 self.api.auth[0],
-                self.api.host, self.api.url_port)
+                self.api.getHost(), self.api.url_port)
 	)
-      except requests.exceptions.RequestException as err:
-         self.logger.error('Session Login Error {}'.format(err))
+      except requests.exceptions.RequestException as e:
+         self.logger.error('Session Login Error on {1}: {0}'.format(e, self.api.getHost()))
       except Exception as e:
-         self.logger.error('Login Session Failed : {}'.format(e))
+         self.logger.error('Login Session Failed on {1}: {0}'.format(e, self.api.getHost()))
 
       return self.FAILURE
  
@@ -137,9 +127,9 @@ class VeeamExporter(object):
       try:
          return self.ns_session_get(url)
       except RetryError as e:
-         self.logger.error('Get Retries Exhausted {}'.format(e))
+         self.logger.error('Get Retries Exhausted on {1}: {0}'.format(e, self.api.getHost()))
       except Exception as e:
-         self.logger.error('Stat Access Failed {}'.format(e))
+         self.logger.error('Stat Access Failed on {1}: {0}'.format(e, self.api.getHost()))
 
       return self.FAILURE, None
 
@@ -181,8 +171,6 @@ class VeeamExporter(object):
       for met_name in self.metrics.keys():
          metric = self.metrics[met_name]
 
-         if met_name == 'Overview of Backup Job Sessions per VM':
-            self.logger.debug( "action: debug break.")
          #* try collecting the data
          try:
             self.engine.perform_action( **{

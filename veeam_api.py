@@ -246,13 +246,6 @@ class VeeamAPI:
     #***********************************************
     def hasToken(self):
        return self.token is not None
-    #***********************************************
-    def hasLogged(self):
-       return self.has_logged
-
-    #***********************************************
-    def keepSession(self):
-       return self.keep_session
 
     #***********************************************
     def hasLogged(self):

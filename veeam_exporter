@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError, ReadTimeout
 
 from constants import (PKG_NAME, PKG_VERSION, EXPORTER_CONFIG_NAME)
 
-from veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
+from veeam_api import VeeamAPI
 from filters import Filters, Filter
 from core_exporter import VeeamExporter
 from collector import VeeamCollector
@@ -85,10 +85,15 @@ def read_metrics_files(base_path, metrics_pattern, metric_name):
       count = 1
       #two case: pattern or full path.
       if path is not None:
-         for pa in Path(path).iterdir():
-#            print('path: {0}'.format(pa) )
-            if pattern.search(str(pa)):
-               metrics.update( read_metrics_file(pa, metric_name) )
+         try:
+            for pa in Path(path).iterdir():
+#               print('path: {0}'.format(pa) )
+               if pattern.search(str(pa)):
+                  metrics.update( read_metrics_file(pa, metric_name) )
+
+         except FileNotFoundError as exc:
+            logger.warning('{0}'.format(exc))
+
       else:
          metrics.update( read_metrics_file(pattern, metric_name) )
 
@@ -326,9 +331,9 @@ def main():
 		protocol = protocol,
 		verify = verify_ssl,
 		timeout = timeout,
-                keep_session = keep_session,
-                labels = labels,
-                proxy = proxy,
+		keep_session = keep_session,
+		labels = labels,
+		proxy = proxy,
          )
       except:
          logger.error('can\'t init veeam api.')
@@ -355,11 +360,11 @@ def main():
    #*****************************
    #* build veeam exporter interface
    exporter = VeeamExporter(
-     engine=script,
-     apis=apis,
-     metrics=metrics,
-     debug=args.verbose,
-     logger=logger
+	engine=script,
+	apis=apis,
+	metrics=metrics,
+	debug=args.verbose,
+	logger=logger
    )
 
    if args.dry_mode:

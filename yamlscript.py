@@ -6,10 +6,20 @@ import json
 
 from prometheus_client import Gauge, Counter
 
-#from veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
 from filters import Filters
-from emptyItem import EmptyItem
-#from requests.exceptions import ConnectionError, ReadTimeout, RequestException
+
+#******************************************************************************************
+class EmptyItem(object):
+   """
+    default item in a loop (query or rule) when no loop element is defined
+   """
+   #***********************************************
+#   def __init__( self ):
+#      self = args[0]
+
+   #***********************************************
+   def __getattr__(self, name):
+     return '<undef>'
 
 #*******************************************************************************************************
 def my_finalize(thing):
