@@ -2358,8 +2358,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "agtveeam1.argenteuil.dassault-avion.fr",
-              "value": "agtveeam1.argenteuil.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -2668,8 +2668,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "agtveeam1.argenteuil.dassault-avion.fr",
-              "value": "agtveeam1.argenteuil.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -2876,8 +2876,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "agtveeam1.argenteuil.dassault-avion.fr",
-              "value": "agtveeam1.argenteuil.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -3154,8 +3154,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "agtveeam1.argenteuil.dassault-avion.fr",
-              "value": "agtveeam1.argenteuil.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -3677,8 +3677,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "sctveeam1.st-cloud.dassault-avion.fr",
-              "value": "sctveeam1.st-cloud.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "seriesOverrides": [],
@@ -3807,8 +3807,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "sctveeam1.st-cloud.dassault-avion.fr",
-              "value": "sctveeam1.st-cloud.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "seriesOverrides": [],
@@ -4020,8 +4020,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "sctveeam1.st-cloud.dassault-avion.fr",
-              "value": "sctveeam1.st-cloud.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -4087,8 +4087,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "sctveeam1.st-cloud.dassault-avion.fr",
-              "value": "sctveeam1.st-cloud.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "targets": [
@@ -4153,8 +4153,8 @@
           "scopedVars": {
             "backupserver": {
               "selected": true,
-              "text": "sctveeam1.st-cloud.dassault-avion.fr",
-              "value": "sctveeam1.st-cloud.dassault-avion.fr"
+              "text": "",
+              "value": ""
             }
           },
           "seriesOverrides": [
