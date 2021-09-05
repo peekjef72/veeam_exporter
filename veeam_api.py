@@ -78,7 +78,7 @@ class VeeamAPI:
         proxy=None,
         keep_session=True,
     ):
-        self.auth = auth
+        self.basic_auth = auth
         self.verify = verify
         self.timeout = timeout
         self.keep_session = keep_session
@@ -99,7 +99,7 @@ class VeeamAPI:
                     val = lab['value']
                  self.def_label_values[ lab['name'] ] = val
 
-        self.token = None
+#        self.token = None
         self.has_logged = False
 
         def construct_api_url():
@@ -122,10 +122,10 @@ class VeeamAPI:
         self.url_proxy = proxy
         self.open_session()
 
-        if not isinstance(self.auth, tuple):
+        if isinstance(self.auth, TokenAuth):
             self.auth = TokenAuth(self.auth)
         else:
-            self.auth = requests.auth.HTTPBasicAuth(*self.auth)
+            self.auth = requests.auth.HTTPBasicAuth(*self.basic_auth)
 
     #***********************************************
     def open_session(self):
@@ -194,8 +194,8 @@ class VeeamAPI:
         try:
            login = self.POST('/sessionMngr/?v=latest', want_raw=True)
            if login.status_code == 201 and 'X-RestSvcSessionId' in login.headers:
-              self.token = login.headers['X-RestSvcSessionId']
-              self.auth = TokenAuth( self.token )
+              token = login.headers['X-RestSvcSessionId']
+              self.auth = TokenAuth( token )
               self.has_logged = True
 
         except:
@@ -241,11 +241,12 @@ class VeeamAPI:
     def clear(self):
        self.s.close
        self.open_session()
-       self.token = None
+#       self.token = None
+       self.auth = requests.auth.HTTPBasicAuth(*self.basic_auth)
 
     #***********************************************
     def hasToken(self):
-       return self.token is not None
+       return isinstance(self.auth, TokenAuth) and self.auth.token is not None
 
     #***********************************************
     def hasLogged(self):

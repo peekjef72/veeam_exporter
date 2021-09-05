@@ -103,7 +103,7 @@ class VeeamExporter(object):
 
          if 'SessionId' in login:
             if login['SessionId'] != '':
-               if not nas_logged:
+               if not has_logged:
                   self.logger.info("Veeam Entreprise Manager Session Login Successful on {0}".format( self.api.getHost() ) )
                return self.SUCCESS
 
