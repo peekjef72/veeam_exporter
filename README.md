@@ -2,7 +2,7 @@
 
 ## Overview
 
-![dashboard overview(./screenshots/veeam_general_dash.png)
+![dashboard overview](./screenshots/veeam_general_dash.png)
 
 ## Description
 
