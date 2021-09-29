@@ -1,4 +1,4 @@
-from veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
+from veeam_exporter.veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
 from requests.exceptions import ConnectionError, ReadTimeout, RequestException
 
 from prometheus_client import CollectorRegistry, generate_latest, Gauge

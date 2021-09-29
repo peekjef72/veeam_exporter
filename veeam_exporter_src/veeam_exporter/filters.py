@@ -21,6 +21,11 @@ class Filters(object):
    #********************************
    def __init__(self, path='./custom_filters'):
       self.add( Filter('default') )
+      if path is None:
+         if 'veeam_exporter' in sys.modules:
+            path = (sys.modules['veeam_exporter'].__path__)[0] + '/custom_filters'
+         else:
+            path='./custom_filters'
       self.load(path)
 
    #********************************

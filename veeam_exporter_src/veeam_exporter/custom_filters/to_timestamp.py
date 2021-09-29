@@ -7,6 +7,8 @@ if 'Filter' in sys.modules:
    Filter = sys.modules['Filter']
 elif 'filters' in sys.modules:
    Filter = sys.modules['filters'].Filter
+elif 'veeam_exporter.filters' in sys.modules:
+   Filter = sys.modules['veeam_exporter.filters'].Filter
 
 if Filter is None:
    raise Exception('Filter module not loaded.')

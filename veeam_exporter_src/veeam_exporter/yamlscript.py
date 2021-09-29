@@ -6,7 +6,7 @@ import json
 
 from prometheus_client import Gauge, Counter
 
-from filters import Filters
+from veeam_exporter.filters import Filters
 
 #******************************************************************************************
 class EmptyItem(object):

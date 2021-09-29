@@ -9,20 +9,20 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from requests.exceptions import ConnectionError, ReadTimeout
 
-from constants import (PKG_NAME, PKG_VERSION, EXPORTER_CONFIG_NAME)
+from veeam_exporter.constants import (PKG_NAME, PKG_VERSION, EXPORTER_CONFIG_NAME)
 
-from veeam_api import VeeamAPI
-from filters import Filters, Filter
-from core_exporter import VeeamExporter
-from collector import VeeamCollector
-from yamlscript import YamlScript
+from veeam_exporter.veeam_api import VeeamAPI
+from veeam_exporter.filters import Filters, Filter
+from veeam_exporter.core_exporter import VeeamExporter
+from veeam_exporter.collector import VeeamCollector
+from veeam_exporter.yamlscript import YamlScript
 
 #******************************************************************************************
 config = None
 logger = None
 #******************************************************************************************
 class myArgs:
-  attrs = [ 'base_path', 'config_file',
+  attrs = [ 'base_path', 'config_file', 'filter_path',
 		'logger.facility', 'logger.level',
 		'web.listen-address', 'dry_mode', 'metrics_file', 'metric', 'target'
           ]
@@ -120,6 +120,9 @@ def main():
    parser.add_argument('-c', '--config_file'
                         , help='path to config files.')
 
+   parser.add_argument('-F', '--filter_path'
+                        , help='set filter directory to find filter files.')
+
    parser.add_argument('-f', '--logger.facility'
                         , help='logger facility (syslog or file path).'
 		)
@@ -171,7 +174,7 @@ def main():
 
    config_file = base_path + '/' + EXPORTER_CONFIG_NAME
    if args.config_file is not None:
-      if not re.match(r'^\.?/', config_file):
+      if not re.match(r'^(\.|\/)?/', args.config_file):
          config_file = base_path + '/' + args.config_file
       else:
          config_file = args.config_file
@@ -193,7 +196,7 @@ def main():
          logfile = config['logger']['facility']
       #print('ok: logfile defined in config.')
       if logfile is not None and logfile != 'syslog':
-         if not re.match(r'^\.?/', logfile):
+         if not re.match(r'^\(./|\/)?', logfile):
             logfile = base_path + '/' + logfile
    except IndexError:
       logfile = None
@@ -278,12 +281,18 @@ def main():
 
    #*****************************
    #* load custom filters
-   filter_path = base_path + '/' + 'custom_filters'
-   if 'custom_filters' in config:
-      if not re.match(r'^\.?/', config['custom_filters']):
-         config_file = base_path + '/' + config['custom_filters']
-      else:
-         filter_path = config['custom_filters']
+
+   filter_path = None
+   if args.filter_path is not None:
+      filter_path = inArgs.filter_path
+      if not re.match(r'^(\.|\/)?/', filter_path):
+         filter_path = base_path + '/' + filter_path
+   else:
+      if 'custom_filters' in config:
+         if not re.match(r'^(\.|\/)?/', config['custom_filters']):
+            config_file = base_path + '/' + config['custom_filters']
+         else:
+            filter_path = config['custom_filters']
 
    filters = Filters(path = filter_path)
 

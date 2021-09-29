@@ -23,5 +23,5 @@ logger:
   level: info
   facility: syslog
 
-metrics_file: "metrics/*_metrics.yml"
+metrics_file: "conf/metrics/*_metrics.yml"
 

@@ -1,6 +1,11 @@
 # veeam_exporter
 
+## Overview
+
+![dashboard overview(./screenshots/veeam_general_dash.png)
+
 ## Description
+
 Prometheus exporter for Veeam Entreprise Manager
 
 This exporter collect metrics from Veeam Enterprise Manager HTTP API.
@@ -132,10 +137,9 @@ This command will try to connect to the 'host.domain' veeam server with paramete
 ## Metrics
 
 The collected metrics are defined in separetedi files positionned the folder metrics.
-All Values, computations, labels are defined in the metrics files, meaning that the exporter doesn't nothing internally on values. The configuration fully drive how values are rendered.
+All Values, computations, labels are defined in the metrics files, meaning that the exporter doesn't nothing internally on values. The configuration fully drives how values are rendered.
 
 ## Prometheus config
-
 
 ## Extending metrics
 
@@ -162,12 +166,12 @@ The "attributes" are analyzed in the order specified in previous table; it means
 
 action | parameter | description | remark
 ------ | ----------- | ------ | ------
-url | &nbsp; |a string that's representing the entity to collect without '/api' | http://host.domain:port/api**[url]**. e.g.: /reports/summary/overview
+url | &nbsp; |a string that's representing the entity to collect without '/api' | <http://host.domain:port/api**[url>]**. e.g.: /reports/summary/overview
  &nbsp; | var_name |the name ofthe variable to store the results. Default is '_root' meaning that the resulting JSON object is directly store in symbols table. | &nbsp;
- &nbsp; | &nbsp; | &nbsp; | &nbsp; 
- set_fact | &nbsp; | list of variable to define | &nbsp; 
+ &nbsp; | &nbsp; | &nbsp; | &nbsp;
+ set_fact | &nbsp; | list of variable to define | &nbsp;
  &nbsp; | var_name: value| &nbsp;  
- &nbsp; | &nbsp; | &nbsp; | &nbsp; 
+ &nbsp; | &nbsp; | &nbsp; | &nbsp;
 metrics | &nbsp; | define the list of metrics to expose
  &nbsp; | metric_prefix | a prefix to add to all metric name | final name will be [metric_prefix]_[metric_name]
  'a metric' | name | the name of the metric
@@ -175,4 +179,3 @@ metrics | &nbsp; | define the list of metrics to expose
  &nbsp; | type 'gauge' or 'counter' | the type of the prometheus metric | &nbsp;
  &nbsp; | value | the numeric value itself | &nbsp;
  &nbsp; | labels | a list of name value pairs to qualify the metric | &nbsp;
-
