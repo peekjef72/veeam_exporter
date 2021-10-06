@@ -48,14 +48,14 @@ metrics_file: "conf/metrics/*_metrics.yml"
 The exporter may run as a unix command with module installation or as standalone python script without instalation.
 <summary>Usage as a system command</summary>
 
-the easiest wayt is to install from pip:
+the easiest way is to install from pip:
 
 ```shell
 pip3 install --upgrade veeam_exporter
 ```
 
 then you can use the entry point create by the installer of the module in /usr/local/bin/veeam_exporter or in [venv]/bin/veeam_exporter for venv context.
-The commanded usage is in venv.
+The recommanded usage is in venv.
 
 <summary>Usage as a Python Script</summary>
 
@@ -84,7 +84,7 @@ python-dateutil>=0.6.12
 </details>
 
 + Consider, to extract the archiv file in /tmp folder; this will generate a folder /tmp/veeam_exporter_[version].
-+ create a directory where you want by example /opt/veeam_exporter_[version],
++ create a directory where you want, by example /opt/veeam_exporter_[version],
 + move the /tmp/veeam_exporter_[version]/veeam_exporter_package directory to /opt/eeam_exporter_[version]
 + create a command file to launch the exporter in dir /opt/veeam_exporter_[version]
 ```shell
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 + Then edit the conf/config.yml file and add your settings.
 + Try your config by executing the command in try mode
 
-example with the default dumy config file:
+example with the default dummy config file:
 ```shell
 python3 veeam_exporter_cmd -n -v
 veeam_exporter[647132]: level=INFO - veeam_exporter 1.0.3 starting....
