@@ -16,7 +16,7 @@
       with_items: "{{ BackupServers }}"
       metrics:
         - name: config
-          help: config of each backup repository 
+          help: config of each backup server 
           type: gauge
           labels:
             - name: name

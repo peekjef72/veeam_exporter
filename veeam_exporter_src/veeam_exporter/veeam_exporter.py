@@ -1,9 +1,9 @@
 #!/usr/bin/python3.6
 
 import yaml
-from  pathlib import Path
+from pathlib import Path
 
-import argparse, sys, os, re, json, logging, logging.handlers
+import argparse, sys, os, re, json, logging, logging.handlers, inspect
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -150,7 +150,7 @@ def main():
 		)
 
    parser.add_argument('-t ', '--target'
-			, help='In dry_mode collect metrics on specified target.i Default first from config file.'
+			, help='In dry_mode collect metrics on specified target. Default first from config file.'
 			, default=None
 		)
 
@@ -168,11 +168,11 @@ def main():
    inArgs = myArgs()
    args = parser.parse_args(namespace=inArgs)
 
-   base_path = '.'
+   base_path = os.path.dirname( inspect.getabsfile(inspect.currentframe()) )
    if args.base_path is not None:
       base_path = inArgs.base_path
 
-   config_file = base_path + '/' + EXPORTER_CONFIG_NAME
+   config_file = base_path + '/conf/' + EXPORTER_CONFIG_NAME
    if args.config_file is not None:
       if not re.match(r'^(\.|\/)?/', args.config_file):
          config_file = base_path + '/' + args.config_file
@@ -196,7 +196,7 @@ def main():
          logfile = config['logger']['facility']
       #print('ok: logfile defined in config.')
       if logfile is not None and logfile != 'syslog':
-         if not re.match(r'^\(./|\/)?', logfile):
+         if not re.match(r'^(\.|\/)?/', logfile):
             logfile = base_path + '/' + logfile
    except IndexError:
       logfile = None
@@ -345,7 +345,7 @@ def main():
 		proxy = proxy,
          )
       except:
-         logger.error('can\'t init veeam api.')
+         logger.error('can\'t init veeam-exporter api.')
          my_exit(1);
 
       apis.append(api)

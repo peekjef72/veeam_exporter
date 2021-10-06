@@ -19,7 +19,7 @@ class Filters(object):
    filters = {}
 
    #********************************
-   def __init__(self, path='./custom_filters'):
+   def __init__(self, path):
       self.add( Filter('default') )
       if path is None:
          if 'veeam_exporter' in sys.modules:
