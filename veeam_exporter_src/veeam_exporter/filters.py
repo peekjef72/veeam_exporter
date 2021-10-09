@@ -1,7 +1,7 @@
 
-from  pathlib import Path
+from pathlib import Path
 import importlib, sys, os, re
-from inspect import getmembers, isclass
+from inspect import getabsfile, getmembers, isclass
 
 #************************************************************************
 class Filter:
@@ -19,11 +19,14 @@ class Filters(object):
    filters = {}
 
    #********************************
-   def __init__(self, path):
+   def __init__(self, path=None, module_name=None):
+
       self.add( Filter('default') )
+
       if path is None:
-         if 'veeam_exporter' in sys.modules:
-            path = (sys.modules['veeam_exporter'].__path__)[0] + '/custom_filters'
+         if module_name is not None and module_name in sys.modules:
+            mod = sys.modules[module_name]
+            path = os.path.dirname( getabsfile(mod) ) + '/custom_filters'
          else:
             path='./custom_filters'
       self.load(path)

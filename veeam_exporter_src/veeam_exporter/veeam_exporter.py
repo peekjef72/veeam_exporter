@@ -109,6 +109,20 @@ def my_exit(code):
    sys.exit(code)
 
 #******************************************************************************************
+def get_module_path(module_name=None):
+
+   path = None
+
+   if module_name is not None:
+      if module_name in sys.modules:
+         mod = sys.modules[module_name]
+         path = os.path.dirname( inspect.getabsfile(mod) )
+   if path is None:
+     path = os.path.dirname( inspect.getabsfile(inspect.currentframe()) )
+
+   return path
+
+#******************************************************************************************
 def main():
    global logger
 
@@ -168,7 +182,7 @@ def main():
    inArgs = myArgs()
    args = parser.parse_args(namespace=inArgs)
 
-   base_path = os.path.dirname( inspect.getabsfile(inspect.currentframe()) )
+   base_path = get_module_path()   
    if args.base_path is not None:
       base_path = inArgs.base_path
 
@@ -294,7 +308,7 @@ def main():
          else:
             filter_path = config['custom_filters']
 
-   filters = Filters(path = filter_path)
+   filters = Filters(module_name='veeam_exporter', path = filter_path)
 
    #*****************************
    #* build veeam api interface

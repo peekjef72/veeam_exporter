@@ -1,5 +1,5 @@
-import veeam_exporter, sys, os, argparse, inspect
-import shutil 
+import  sys, os, argparse, inspect, shutil 
+from veeam_exporter.veeam_exporter import get_module_path
 
 #******************************************************************************************
 class myArgs:
@@ -16,7 +16,7 @@ def main():
 
    # get command line arguments
 
-   parser = argparse.ArgumentParser(description='build config directory for veeam server.')
+   parser = argparse.ArgumentParser(description='build config directory for veeam_exporter.')
    parser.add_argument('-c', '--config_path'
                         , help='set config directory to copy default files.')
 
@@ -60,15 +60,15 @@ def main():
          print('{0}ok: no copy performed. (overwrite is False)'.format(dry_mode_str))
          sys.exit(0)
   
-   veeam_path = os.path.dirname( inspect.getabsfile(veeam_exporter) )
-   if veeam_path is not None:
-      print('{0}path for module veeam_exporter is : {1}'.format( dry_mode_str, veeam_path ))
+   path = get_module_path()
+   if path is not None:
+      print('{0}path for module veeam_exporter is : {1}'.format( dry_mode_str, path ))
    else:
       print('{0}error: path for module veeam_exporter not found!'.format(dry_mode_str))
       sys.exit(1)
 
    if not args.dry_mode:
-      shutil.copytree(veeam_path + '/conf/', config_path)
+      shutil.copytree(path + '/conf/', config_path)
    print('{0}ok: files copied in {1}'.format(dry_mode_str, config_path))
    sys.exit(0)
 

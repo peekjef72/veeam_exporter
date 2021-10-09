@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 
  <!--next-version-placeholder-->
 
+## v1.0.5 (2021-10-09)
+### fixed
+- change in build_conf command line.
+- fixe Filter class calls.
+
 ## v1.0.4 (2021-10-08)
 ### fixed
 - bug in build_conf command line.
