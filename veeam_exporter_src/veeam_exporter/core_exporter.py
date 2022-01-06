@@ -6,8 +6,6 @@ from prometheus_client import CollectorRegistry, generate_latest, Gauge
 from tenacity import retry, RetryError, retry_if_exception_type
 from tenacity import stop_after_attempt, wait_fixed, retry_if_result
 
-import requests
-
 #*******************************************************************************************************
 # functions for tenacity
 
@@ -116,7 +114,7 @@ class VeeamExporter(object):
                 self.api.auth[0],
                 self.api.getHost(), self.api.url_port)
 	)
-      except requests.exceptions.RequestException as e:
+      except RequestException as e:
          self.logger.error('Session Login Error on {1}: {0}'.format(e, self.api.getHost()))
       except Exception as e:
          self.logger.error('Login Session Failed on {1}: {0}'.format(e, self.api.getHost()))
