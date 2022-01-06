@@ -6,6 +6,8 @@ from prometheus_client import CollectorRegistry, generate_latest, Gauge
 from tenacity import retry, RetryError, retry_if_exception_type
 from tenacity import stop_after_attempt, wait_fixed, retry_if_result
 
+import requests
+
 #*******************************************************************************************************
 # functions for tenacity
 
