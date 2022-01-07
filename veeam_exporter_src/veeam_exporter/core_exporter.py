@@ -114,7 +114,7 @@ class VeeamExporter(object):
                 self.api.auth[0],
                 self.api.getHost(), self.api.url_port)
 	)
-      except requests.exceptions.RequestException as e:
+      except RequestException as e:
          self.logger.error('Session Login Error on {1}: {0}'.format(e, self.api.getHost()))
       except Exception as e:
          self.logger.error('Login Session Failed on {1}: {0}'.format(e, self.api.getHost()))
