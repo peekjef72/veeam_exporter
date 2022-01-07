@@ -7,7 +7,7 @@
 ## Description
 Prometheus exporter for Veeam Entreprise Manager
 
-This exporter collect metrics from Veeam Enterprise Manager HTTP API.
+This exporter collects metrics from Veeam Enterprise Manager HTTP API.
 
 It is a python HTTP server that exposes metrics to http (default port 9247) that can be then scrapped by Prometheus.
 
@@ -54,7 +54,7 @@ the easiest way is to install from pip:
 pip3 install --upgrade veeam_exporter
 ```
 
-then you can use the entry point create by the installer of the module in /usr/local/bin/veeam_exporter or in [venv]/bin/veeam_exporter for venv context.
+then you can use the entry point, createc by the installer of the module in /usr/local/bin/veeam_exporter or in [venv]/bin/veeam_exporter for venv context.
 The recommanded usage is in venv.
 
 <summary>Usage as a Python Script</summary>
@@ -201,7 +201,7 @@ Since several veeam servers can be set in the exporter, Prometheus addresses eac
 ## Metrics
 
 The collected metrics are defined in separeted files positionned the folder conf/metrics.
-All Values, computations, labels are defined in the metrics files, meaning that the exporter doesn't nothing internally on values. The configuration fully drive how values are rendered.
+All Values, computations, labels are defined in the metrics files, meaning that the exporter does nothing internally on values. The configuration fully drives how values are rendered.
 
 ### Collected Metrics
 

@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 
  <!--next-version-placeholder-->
 
+## v1.0.6 (2022-01-07)
+### fixed
+- issue [#1](../../issues/1) exception handling
+- typo in README
+
 ## v1.0.5 (2021-10-09)
 ### fixed
 - change in build_conf command line.
