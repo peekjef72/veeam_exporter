@@ -1,9 +1,9 @@
-from veeam_exporter.veeam_api import VeeamAPI, VeeamAPIUnauthorizedError
+from veeam_exporter.veeam_api import VeeamAPIUnauthorizedError
 from requests.exceptions import ConnectionError, ReadTimeout, RequestException
 
 from prometheus_client import CollectorRegistry, generate_latest, Gauge
 
-from tenacity import retry, RetryError, retry_if_exception_type
+from tenacity import retry, RetryError
 from tenacity import stop_after_attempt, wait_fixed, retry_if_result
 
 #*******************************************************************************************************
@@ -146,13 +146,13 @@ class VeeamExporter(object):
       if len(self.api.def_label_names)>0:
          names = tuple( self.api.def_label_names )
       status = Gauge(
-		# gauge name
-		'veeam_em_up',
-		# gauge help text
-		'probe success  login status: 0 Down / 1 Up',
-		# labels list : veeam em host
-		labelnames = names,
-		registry = self.registry
+         # gauge name
+         'veeam_em_up',
+         # gauge help text
+         'probe success  login status: 0 Down / 1 Up',
+         # labels list : veeam em host
+         labelnames = names,
+         registry = self.registry
         )
       if len(self.api.def_label_names)>0:
          status.labels( **self.api.def_label_values ).set( logged )
@@ -174,11 +174,11 @@ class VeeamExporter(object):
          #* try collecting the data
          try:
             self.engine.perform_action( **{
-		'exporter': self,
-		'task': metric,
-		'local_vars': local_vars,
-		'level': 0,
-	    } )
+               'exporter': self,
+               'task': metric,
+               'local_vars': local_vars,
+               'level': 0,
+            } )
          except Exception as exc:
             self.logger.warning('collect: {0}'.format(exc))
 
