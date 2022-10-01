@@ -4,6 +4,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 
  <!--next-version-placeholder-->
 
+## v1.1.0 (2022-10-01)
+### fixed
+- fixe Filter class calls.
+- review code indentation (from vim to Visual Studio Code), remove unused modules.
+- minor bugfixes
+
 ## v1.0.6 (2022-01-07)
 ### fixed
 - issue [#1](../../issues/1) exception handling
