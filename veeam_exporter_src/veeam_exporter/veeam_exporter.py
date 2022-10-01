@@ -7,7 +7,6 @@ import argparse, sys, os, re, json, logging, logging.handlers, inspect
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from requests.exceptions import ConnectionError, ReadTimeout
 
 from veeam_exporter.constants import (PKG_NAME, PKG_VERSION, EXPORTER_CONFIG_NAME)
 
@@ -193,12 +192,21 @@ def main():
       else:
          config_file = args.config_file
 
-   with open(config_file, 'r') as cfg:
-      try:
-         config = yaml.safe_load(cfg)
-      except yaml.YAMLError as exc:
-         print(exc)
-         sys.exit(1);
+   try:
+      with open(config_file, 'r') as cfg:
+         try:
+            config = yaml.safe_load(cfg)
+         except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit(1);
+   except FileNotFoundError:
+      print("ERROR: config file not found'{0}'.".format(config_file))
+      my_exit(1)
+
+   #* analyze config
+   if config is None:
+      print("ERROR: can't read config file '{0}'.".format(config_file))
+      my_exit(1)
 
    logging.getLogger("urllib3").setLevel(logging.CRITICAL)
    #***********************************************************************************************
@@ -268,14 +276,10 @@ def main():
       logger.addHandler(stream_handler)
 
    logger.info('{0} {1} starting....'.format(PKG_NAME, PKG_VERSION) )
-   #******************************
-   #* analyze config
-   if config is None:
-      logging.error("can't read config file '{0}'.".format(config_found))
-      my_exit(1)
 
    logger.debug( 'config is {0}'.format(config) )
 
+   #******************************
    metrics_file = None
    if args.metrics_file is not None:
       metrics_file = args.metrics_file
@@ -308,7 +312,7 @@ def main():
          else:
             filter_path = config['custom_filters']
 
-   filters = Filters(module_name='veeam_exporter', path = filter_path)
+   filters = Filters(path = filter_path)
 
    #*****************************
    #* build veeam api interface
@@ -347,16 +351,16 @@ def main():
       #* to do on every "request"
       try:
          api =  VeeamAPI(
-		( veeam['user'], veeam['password'] ),
-		host=veeam['host'],
-		port=port,
-		url_path_prefix="api",
-		protocol = protocol,
-		verify = verify_ssl,
-		timeout = timeout,
-		keep_session = keep_session,
-		labels = labels,
-		proxy = proxy,
+            ( veeam['user'], veeam['password'] ),
+            host=veeam['host'],
+            port=port,
+            url_path_prefix="api",
+            protocol = protocol,
+            verify = verify_ssl,
+            timeout = timeout,
+            keep_session = keep_session,
+            labels = labels,
+            proxy = proxy,
          )
       except:
          logger.error('can\'t init veeam-exporter api.')
@@ -383,11 +387,11 @@ def main():
    #*****************************
    #* build veeam exporter interface
    exporter = VeeamExporter(
-	engine=script,
-	apis=apis,
-	metrics=metrics,
-	debug=args.verbose,
-	logger=logger
+      engine=script,
+      apis=apis,
+      metrics=metrics,
+      debug=args.verbose,
+      logger=logger
    )
 
    if args.dry_mode:
@@ -429,9 +433,9 @@ def main():
       pass
 
    collector = VeeamCollector(
-	exporter = exporter,
-	port=port,
-	address=addr,
+      exporter = exporter,
+      port=port,
+      address=addr,
    )
 
    collector.starts()
