@@ -38,7 +38,7 @@ class MyCounter(Counter):
 
     def _child_samples(self):
         return (
-            ('_total', {}, self._value.get()),
+            ('_total', {}, self._value.get(), None, self._value.get_exemplar()),
         )
 
 #*******************************************************************************************************
@@ -385,13 +385,13 @@ class MetricAction(BaseAction):
             if cur_type == 'counter':
                klass = MyCounter
          col_metric = klass(
-		# metric name
-		name,
-		# metric help text
-		help_txt,
-		# labels list
-		labelnames = tuple(label_names),
-		registry = exporter.registry
+            # metric name
+            name,
+            # metric help text
+            help_txt,
+            # labels list
+            labelnames = tuple(label_names),
+            registry = exporter.registry
          )
       else:
          if name in exporter.registry._names_to_collectors:
@@ -399,7 +399,7 @@ class MetricAction(BaseAction):
          elif name + '_total' in exporter.registry._names_to_collectors:
             col_metric = exporter.registry._names_to_collectors[ name + '_total']
          else:
-            sel.logger.warning("Metric collector for '{0}' not found.".format(name))
+            self.logger.warning("Metric collector for '{0}' not found.".format(name))
             return
 
       if 'labels' in metric and labels is not None:
