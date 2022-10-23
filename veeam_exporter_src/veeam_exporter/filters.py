@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+#************************************************************************
 
 from pathlib import Path
 import importlib, sys, os, re
@@ -21,8 +23,6 @@ class Filters(object):
    #********************************
    def __init__(self, path=None, module_name=None):
 
-      self.add( Filter('default') )
-
       if path is None:
          if module_name is None:
             module_name = __name__.split('.')[0]
@@ -31,6 +31,7 @@ class Filters(object):
             path = os.path.join(os.path.dirname( getabsfile(mod) ), 'custom_filters')
          else:
             path=os.path.join('.', 'custom_filters' )
+
       self.load(path)
 
    #********************************
@@ -40,7 +41,7 @@ class Filters(object):
    #********************************
    def add(self, filter):
       if isinstance( filter, Filter ):
-         Filters.filters[filter.name] = filter;
+         Filters.filters[filter.name] = filter
 
    #********************************
    def find(self, name):
