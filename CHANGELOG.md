@@ -3,10 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a changelog](https://github.com/olivierlacan/keep-a-changelog).
 
  <!--next-version-placeholder-->
+## v1.1.1 (2022-10-23)
+### fixed
+- fix Filter : remove 'default' function overwrite.
+- fix Filter import from custom filters.
 
 ## v1.1.0 (2022-10-01)
 ### fixed
-- fixe Filter class calls.
+- fix Filter class calls.
 - review code indentation (from vim to Visual Studio Code), remove unused modules.
 - minor bugfixes
 
@@ -18,7 +22,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a ch
 ## v1.0.5 (2021-10-09)
 ### fixed
 - change in build_conf command line.
-- fixe Filter class calls.
+- fix Filter class calls.
 
 ## v1.0.4 (2021-10-08)
 ### fixed
