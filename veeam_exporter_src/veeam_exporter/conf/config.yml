@@ -1,10 +1,9 @@
-
-veeams: 
+veeams:
   - host: host.domaine
     port: 9398
-    user: 'user'
-    password: 'password'
-#      protocol: https
+    user: "user"
+    password: "password"
+    #      protocol: https
     verify_ssl: false
     timeout: 20
 #    keep_session: true # default
@@ -21,7 +20,6 @@ weblisten:
 
 logger:
   level: info
-  facility: syslog
+  facility: stdout
 
 metrics_file: "conf/metrics/*_metrics.yml"
-
