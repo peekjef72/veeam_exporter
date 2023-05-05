@@ -3570,7 +3570,7 @@
             "backupserver": {
               "selected": true,
               "text": "",
-              "value": "",
+              "value": ""
             }
           },
           "targets": [

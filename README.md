@@ -21,6 +21,9 @@ veeams:
     port: 9398
     user: 'user'
     password: 'password'
+    auth:
+      # should be basic or encrypted
+      type: basic
 #   protocol: https
 #   verify_ssl: false
 #   timeout: 20
@@ -28,9 +31,9 @@ veeams:
 #   default_labels:
 #     - name: veeam_em
 #       value: my_veeam_em_server.domain
-#       proxy:
-#         url: http://my.proxy.domain:port/
-#         protocol: https
+#   proxy:
+#     url: http://my.proxy.domain:port/
+#     protocol: https
 
 weblisten:
   address: 0.0.0.0
@@ -79,6 +82,7 @@ tenacity==6.2.0
 urllib3>=1.25.9
 Jinja2>=2.11.2
 python-dateutil>=0.6.12
+pycryptodome>=3.17.0
 ```
 
 </details>
@@ -198,9 +202,10 @@ Since several veeam servers can be set in the exporter, Prometheus addresses eac
         replacement: "veeam-exporter-hostname.domain:9247"  # The veeam exporter's real hostname.
 
 ```
+
 ## Metrics
 
-The collected metrics are defined in separeted files positionned the folder conf/metrics.
+The collected metrics are defined in separate files positioned the folder conf/metrics.
 All Values, computations, labels are defined in the metrics files, meaning that the exporter does nothing internally on values. The configuration fully drives how values are rendered.
 
 ### Collected Metrics
@@ -257,3 +262,170 @@ metrics | &nbsp; | define the list of metrics to expose
  &nbsp; | value | the numeric value itself | &nbsp;
  &nbsp; | labels | a list of name value pairs to qualify the metric | &nbsp;
 
+# Password encryption
+
+There is no miracle solution since no user interaction is possible, including the launching time of the exporter.
+This exporter now includes a basic method to crypt/decrypt password based a symetric 128 bits key (16 bytes) shared between prometheus and the exporter.
+
+How it works:
+- generate and store a 16 or 32 bytes password in your favorite password tool (keepass by example). It will be used as a shared secret key.
+- use the provided tool to encrypt the password (passwd_crypt). It generates an encrypted base64 text.
+- set the exporter config file with the encrypted password and set a property to inform the exporter that the password is encrypted.
+- set the Prometheus configuration to add a parameter authkey set to the shared secret key to scrap the target.
+
+The exporter config file now doesn't expose the password in clear text, and it can authenticate to the Veeam Server when it requires by decrypting the password with the authkey send by Prometheus.
+
+The authkey is not kept by the exporter: it is received, used if login is required, then dropt. Same for the decrypted password: it is used to build the basic authorisation header then zeroed (but may remained in memory because of python immutable string...)
+
+Most of the time, the exporter will use the authentication token received after a successfull login unless you set keep_session to false for the target. So decryption has a litle impact on performance.
+
+## Usage
+
+```shell
+$ ./passwd_crypt -h
+usage: passwd_crypt [-h] [-d] [-k KEY] [-p  PASSWORD]
+
+Generate encrypted password with shared key.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d , --decrypt        decrypt the provided text.
+  -k KEY, --key KEY     set the key to encrypted set password.
+  -p  PASSWORD, --password PASSWORD
+                        password to crypt.
+```
+
+### generate an encrypted password 
+
+```shell
+$ ./passwd_crypt
+shared key:
+password to encypt:
+encrypted result: jW8ZeHnrNTViBfEJ5ce62PYI0P9uwWGwkCuS6sPAyErwBffzsi4u8U35
+```
+you can verify the password:
+
+```shell
+$ ./passwd_crypt -d
+shared key:
+password to decrypt:
+content: b'my_password'
+```
+
+### Store encrypted password in configuration file
+
+```yaml
+veeams:
+  - host: host.domain
+    port: 9398
+    user: user
+    password: jW8ZeHnrNTViBfEJ5ce62PYI0P9uwWGwkCuS6sPAyErwBffzsi4u8U35
+    auth:
+      # should be basic or encrypted
+      type: encrypted
+```
+### Check the exporter
+
+At this point you can start the exporter in dry_mode and check the authentication to the target.
+Use a simple curl command:
+
+```shell
+./veeam_exporter -n -b /etc/veeam_exporter/ --config_file /etc/veeam_exporter/config.yml
+veeam_exporter[794831]: level=INFO - veeam_exporter 1.1.2 starting....
+veeam_exporter[794831]: level=DEBUG - config is {'veeams': [{'host': 'host.domain', 'port': 9398, 'user': 'user', 'password': 'REMOVED', 'authmode': {'type': 'encrypted'}, 'verify_ssl': False, 'timeout': 20}], 'weblisten': {'address': '0.0.0.0', 'port': 9247}, 'logger': {'level': 'info', 'facility': 'syslog'}, 'metrics_file': 'metrics/*_metrics.yml'}
+target required encrypted auth!
+authkey:
+veeam_exporter[794831]: level=INFO - Veeam Entreprise Manager Session Login Successful on host.domain
+veeam_exporter[794831]: level=DEBUG - task: Overview of the Veeam Agents.
+veeam_exporter[794831]: level=DEBUG - task: collect elements.
+veeam_exporter[794831]: level=DEBUG - task: procceed elements.
+veeam_exporter[794831]: level=DEBUG - task: Overview of Backup Job Sessions.
+...
+veeam_exporter[794831]: level=DEBUG - # TYPE veeam_em_overview_vms_count gauge
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_count{type="protected"} 2152.0
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_count{type="backedup"} 2152.0
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_count{type="replicated"} 0.0
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_count{type="restore_points"} 2189.0
+veeam_exporter[794831]: level=DEBUG - # HELP veeam_em_overview_vms_total_bytes VMs total size in bytes by type "full_backup_points", "incremental_backup_points", "replica_restore_points", "source_vms"
+veeam_exporter[794831]: level=DEBUG - # TYPE veeam_em_overview_vms_total_bytes gauge
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_total_bytes{type="full_backup_points"} 3.8789074898944e+013
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_total_bytes{type="incremental_backup_points"} 1.856634806272e+013
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_total_bytes{type="replica_restore_points"} 0.0
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_total_bytes{type="source_vms"} 3.2752758516237e+014
+veeam_exporter[794831]: level=DEBUG - # HELP veeam_em_overview_vms_sucess_backup_percent percent of sucessful backup of VMs
+veeam_exporter[794831]: level=DEBUG - # TYPE veeam_em_overview_vms_sucess_backup_percent gauge
+veeam_exporter[794831]: level=DEBUG - veeam_em_overview_vms_sucess_backup_percent 100.0
+veeam_exporter[794831]: level=INFO - veeam_exporter 1.1.2 stopped.
+$
+```
+
+if something went wrong:
+
+```shell
+veeam_exporter[794427]: level=INFO - veeam_exporter 1.1.2 starting....
+veeam_exporter[794427]: level=DEBUG - config is {'veeams': [{'host': 'host.domain', 'port': 9398, 'user': 'user', 'password': 'REMOVED', 'authmode': {'type': 'encrypted'}, 'verify_ssl': False, 'timeout': 20}], 'weblisten': {'address': '0.0.0.0', 'port': 9247}, 'logger': {'level': 'info', 'facility': 'syslog'}, 'metrics_file': 'metrics/*_metrics.yml'}
+target required encrypted auth!
+authkey:
+veeam_exporter[794427]: level=ERROR - Login Session Failed on host.domain: Incorrect AES key length (4 bytes)
+veeam_exporter[794427]: level=DEBUG - # HELP veeam_em_up probe success  login status: 0 Down / 1 Up
+veeam_exporter[794427]: level=DEBUG - # TYPE veeam_em_up gauge
+veeam_exporter[794427]: level=DEBUG - veeam_em_up 0.0
+veeam_exporter[794427]: level=INFO - veeam_exporter 1.1.2 stopped.
+$
+```
+
+### Configure Prometheus job
+
+If you have a same shared key for all targets you can only add the directive "param" in the job:
+```yaml
+  - job_name: "veeam"
+    scrape_interval: 120s
+    scrape_timeout: 60s
+    metrics_path: /metrics
+    params:
+      auth_key: mwscDtQqIGtlnAxCzwz6hoz3ehjetMnP
+
+    static_configs:
+      - targets: [ veeamhost.domain ]
+        labels:
+          environment: "PROD"
+
+#    file_sd_configs:
+#      - files: [ "/etc/prometheus/veeam_exp/*.yml" ]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - source_labels: [__auth_key]
+        target_label: __param_authkey
+      - target_label: __address__
+        replacement: "veeam-exporter-hostname.domain:9247"  # The veeam exporter's real hostname.
+```
+
+but if each target has its own shared key, the it as a label of the target and set it by relabeling:
+
+```yaml
+  - job_name: "veeam"
+    scrape_interval: 120s
+    scrape_timeout: 60s
+    metrics_path: /metrics
+
+    static_configs:
+      - targets: [ veeamhost.domain ]
+        labels:
+          environment: "PROD"
+          __auth_key: mwscDtQqIGtlnAxCzwz6hoz3ehjetMnP
+
+#    file_sd_configs:
+#      - files: [ "/etc/prometheus/veeam_exp/*.yml" ]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - source_labels: [__auth_key]
+        target_label: __param_authkey
+      - target_label: __address__
+        replacement: "veeam-exporter-hostname.domain:9247"  # The veeam exporter's real hostname.
+```
