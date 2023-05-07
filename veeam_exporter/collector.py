@@ -25,6 +25,7 @@ class VeeamCollectorRequestHandler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path == '/metrics':
             params = parse_qs(url.query)
+            authkey = params.get("authkey", None)
             if 'target' in params:
                found = False
                for target in self.server.collector.exporter.apis:
@@ -33,6 +34,8 @@ class VeeamCollectorRequestHandler(BaseHTTPRequestHandler):
                      self.server.collector.exporter.api = target
                      local_data = threading.local()
                      local_data.vars = {}
+                     if authkey is not None and len(authkey)>0:
+                        local_data.vars["authkey"] = authkey[0]
                      output = self.server.collector.exporter.collect( local_data.vars )
                      self.send_response(200)
                      self.send_header('Content-Type', CONTENT_TYPE_LATEST)
