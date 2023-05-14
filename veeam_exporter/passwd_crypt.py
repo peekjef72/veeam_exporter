@@ -1,7 +1,8 @@
 #!/usr/bin/python3.9
+# -*- coding:utf-8 -*-
+#************************************************************************
 
 from Crypto.Cipher import AES
-# from Crypto import Random
 from Crypto.Random import get_random_bytes
 import base64, getpass
 import sys, argparse

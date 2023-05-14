@@ -1,4 +1,5 @@
-#import sys, os, logging
+# -*- coding:utf-8 -*-
+#************************************************************************
 from threading import Lock
 
 from jinja2 import Environment

@@ -1,3 +1,6 @@
+# -*- coding:utf-8 -*-
+#************************************************************************
+
 from veeam_exporter.veeam_api import VeeamAPIUnauthorizedError
 from requests.exceptions import ConnectionError, ReadTimeout, RequestException
 
@@ -77,12 +80,12 @@ class VeeamExporter(object):
       self.api.clear()
 
    #***********************************************
-   def login(self):
+   def login(self, auth_key):
       if self.api.hasToken():
          return True
 
       try:
-         if self.ns_session_login() == self.SUCCESS:
+         if self.ns_session_login(auth_key) == self.SUCCESS:
             return True
       except RetryError as e:
          self.logger.error('Login Retries Exhausted {}'.format(e))
@@ -94,12 +97,12 @@ class VeeamExporter(object):
 
    #***********************************************
    @retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=retry_if_result(retry_login))
-   def ns_session_login(self):
+   def ns_session_login(self, auth_key: str):
 
       ''' Login to ADC and get a session id for stat access'''
       try:
          has_logged = self.api.hasLogged()
-         login = self.api.login()
+         login = self.api.login(auth_key)
 
          if 'SessionId' in login:
             if login['SessionId'] != '':
@@ -111,9 +114,9 @@ class VeeamExporter(object):
          self.logger.error('Connection Exception: Host {1}: {0}'.format(exc, self.api.getHost()))
       except VeeamAPIUnauthorizedError as exc:
          self.logger.error("user '{0}' not authorized on https://{1}:{2}".format(
-                self.api.auth[0],
+                self.api.cfg_auth.user,
                 self.api.getHost(), self.api.url_port)
-	)
+	      )
       except RequestException as e:
          self.logger.error('Session Login Error on {1}: {0}'.format(e, self.api.getHost()))
       except Exception as e:
@@ -137,14 +140,19 @@ class VeeamExporter(object):
    def collect( self, local_vars ):
 
       logged = 0
+      authkey = local_vars.get("authkey", None)
 
-      if self.login():
+      if self.login(authkey):
          logged = 1
+      if authkey is not None:
+         del local_vars["authkey"]
 
       self.registry = CollectorRegistry()
       names = ()
+
       if len(self.api.def_label_names)>0:
          names = tuple( self.api.def_label_names )
+
       status = Gauge(
          # gauge name
          'veeam_em_up',
@@ -153,7 +161,8 @@ class VeeamExporter(object):
          # labels list : veeam em host
          labelnames = names,
          registry = self.registry
-        )
+      )
+
       if len(self.api.def_label_names)>0:
          status.labels( **self.api.def_label_values ).set( logged )
       else:
