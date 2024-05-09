@@ -1,5 +1,4 @@
-
-veeams: 
+veeams:
   - host: host.domaine
     port: 9398
     user: 'user'
@@ -25,7 +24,6 @@ weblisten:
 
 logger:
   level: info
-  facility: syslog
+  facility: stdout
 
 metrics_file: "conf/metrics/*_metrics.yml"
-

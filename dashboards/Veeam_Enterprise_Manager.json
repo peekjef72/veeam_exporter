@@ -3811,10 +3811,8 @@
         "current": {
           "selected": true,
           "tags": [],
-          "text": [ 
-          ],
-          "value": [
-          ]
+          "text": [],
+          "value": []
         },
         "datasource": null,
         "definition": "label_values(veeam_em_backup_servers_config, name)",
