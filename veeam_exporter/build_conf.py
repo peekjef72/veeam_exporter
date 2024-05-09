@@ -1,3 +1,6 @@
+# -*- coding:utf-8 -*-
+#************************************************************************
+
 import  sys, os, argparse, inspect, shutil 
 from veeam_exporter.veeam_exporter import get_module_path
 

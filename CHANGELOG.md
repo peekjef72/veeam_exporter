@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a changelog](https://github.com/olivierlacan/keep-a-changelog).
 
  <!--next-version-placeholder-->
+## 1.1.2 / 2023-05-05
+This release adds the some kind of password encryption for target hosts in configuration file.
+- [FEATURE] passwords encryption.
+
 ## v1.1.1 (2022-10-23)
 ### fixed
 - fix Filter : remove 'default' function overwrite.

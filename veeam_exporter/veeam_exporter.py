@@ -1,7 +1,11 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3
+# -*- coding:utf-8 -*-
+#************************************************************************
 
+from copy import deepcopy
 import yaml
 from pathlib import Path
+from getpass import getpass
 
 import argparse, sys, os, re, json, logging, logging.handlers, inspect
 
@@ -37,6 +41,15 @@ class myArgs:
         if not val is None:
            obj[attr] = val
     return json.dumps(obj)
+
+#******************************************************************************************
+def to_string(config: dict) -> str:
+   cfg = deepcopy(config)
+   
+   for i in range(len(config["veeams"])):
+      cfg["veeams"][i]["password"] = 'REMOVED'
+
+   return str(cfg)
 
 #******************************************************************************************
 def read_metrics_file(file, metric_name):
@@ -142,42 +155,42 @@ def main():
 
    parser.add_argument('-l', '--logger.level'
                         , help='logger level.'
-			, choices=['error', 'warning', 'info', 'debug' ]
-			, default='info'
+                        , choices=['error', 'warning', 'info', 'debug' ]
+                        , default='info'
 		)
 
    parser.add_argument('-o ', '--metrics_file'
-			, help='collect the metrics from the specified file instead of config.'
-			, default=None
+                        , help='collect the metrics from the specified file instead of config.'
+                        , default=None
 		)
 
    parser.add_argument('-m ', '--metric'
-			, help='collect only the specified metric name from the metrics_file.'
-			, default=None
+                        , help='collect only the specified metric name from the metrics_file.'
+                        , default=None
 		)
 
    parser.add_argument('-n ', '--dry_mode'
-			, action='store_true'
-			, help='collect the metrics then exit; display results to stdout.'
-			, default=False
+                        , action='store_true'
+                        , help='collect the metrics then exit; display results to stdout.'
+                        , default=False
 		)
 
    parser.add_argument('-t ', '--target'
-			, help='In dry_mode collect metrics on specified target. Default first from config file.'
-			, default=None
+                        , help='In dry_mode collect metrics on specified target. Default first from config file.'
+                        , default=None
 		)
 
    parser.add_argument('-w', '--web.listen-address'
-			, help='Address to listen on for web interface and telemetry.'
-			, default=':9247'
+                        , help='Address to listen on for web interface and telemetry.'
+                        , default=':9247'
 		)
    parser.add_argument('-V', '--version'
-			, action='version', version='{0} {1}'.format(PKG_NAME, PKG_VERSION)
+                        , action='version', version='{0} {1}'.format(PKG_NAME, PKG_VERSION)
                         , help='display program version and exit..')
 
    parser.add_argument('-v ', '--verbose'
-			, action='store_true'
-			, help='verbose mode; display log message to stdout.')
+                        , action='store_true'
+                        , help='verbose mode; display log message to stdout.')
    inArgs = myArgs()
    args = parser.parse_args(namespace=inArgs)
 
@@ -277,7 +290,7 @@ def main():
 
    logger.info('{0} {1} starting....'.format(PKG_NAME, PKG_VERSION) )
 
-   logger.debug( 'config is {0}'.format(config) )
+   logger.debug( 'config is {0}'.format(to_string(config)) )
 
    #******************************
    metrics_file = None
@@ -348,10 +361,13 @@ def main():
       if 'proxy' in veeam and isinstance(veeam['proxy'], dict):
          proxy = veeam['proxy']
 
+      authmode_type = None
+      if 'authmode' in veeam and 'type' in veeam["authmode"]:
+         authmode_type = veeam["authmode"]["type"]
       #* to do on every "request"
       try:
          api =  VeeamAPI(
-            ( veeam['user'], veeam['password'] ),
+            ( veeam['user'], veeam['password'], authmode_type ),
             host=veeam['host'],
             port=port,
             url_path_prefix="api",
@@ -364,25 +380,25 @@ def main():
          )
       except:
          logger.error('can\'t init veeam-exporter api.')
-         my_exit(1);
+         my_exit(1)
 
       apis.append(api)
 
    if len(apis) < 1:
       logger.error('No exporter target host found.')
-      my_exit(1);
+      my_exit(1)
 
    #*****************************
    #* build yamscript prog
    try:
       script = YamlScript(
-	filters=filters,
-	debug=args.verbose,
-	logger=logger
+         filters=filters,
+         debug=args.verbose,
+         logger=logger
       )
    except:
       logger.error('can\'t init YAM script engine.')
-      my_exit(1);
+      my_exit(1)
 
    #*****************************
    #* build veeam exporter interface
@@ -406,8 +422,21 @@ def main():
          if args.target is not None:
             logger.warning("Specified target '{0}' not found. use default.".format(args.target))
          target = exporter.apis[0]
+
+      local_vars = {}
+      if target.cfg_auth is not None and target.cfg_auth.type == "encrypted":
+         authkey = None
+         print("target required encrypted auth!")
+         try:
+            authkey = getpass("authkey: ")
+         except EOFError:
+            pass
+
+         if authkey is not None:
+            local_vars["authkey"] = authkey
+
       exporter.api = target
-      exporter.collect( {} )
+      exporter.collect( local_vars )
       my_exit(0)
 
    #*****************************

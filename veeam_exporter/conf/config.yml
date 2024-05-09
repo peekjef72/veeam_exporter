@@ -1,9 +1,13 @@
 veeams:
   - host: host.domaine
     port: 9398
-    user: "user"
-    password: "password"
-    #      protocol: https
+    user: 'user'
+    password: 'password'
+    authmode:
+      # basic: raw password
+      # encrypted : symetric encryption
+      type: basic
+#      protocol: https
     verify_ssl: false
     timeout: 20
 #    keep_session: true # default

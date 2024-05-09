@@ -5,3 +5,4 @@ tenacity==6.2.0
 urllib3>=1.25.9
 Jinja2>=2.11.2
 python-dateutil>=0.6.12
+pycryptodome>=3.17.0
