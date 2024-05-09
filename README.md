@@ -1,6 +1,11 @@
 # veeam_exporter
 
+<em style="font-weight: bold; text-align: center;">ARCHIVED REPOSITORY</em>
+
+## This repository is now archived. I strongly encourage to migrate to [httpapi_exporter](https://github.com/peekjef72/httpapi_exporter.git)
+
 ## Overview
+
 
 ![dashboard overview](./screenshots/veeam_general_dash.png)
 
